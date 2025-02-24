@@ -176,7 +176,7 @@ def compute_metrics(p: EvalPrediction):
         result = multi_label_metrics(predictions=preds, labels=p.label_ids)
     return result
 
-num_labels=4
+num_labels=3
 
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
@@ -215,8 +215,7 @@ def objective(trial):
         trust_remote_code=True,
     )
 
-    num_labels = 4
-    model = AutoModelForSequenceClassification.from_pretrained("InstaDeepAI/nucleotide-transformer-500m-human-ref", num_labels=4)
+    model = AutoModelForSequenceClassification.from_pretrained("InstaDeepAI/nucleotide-transformer-500m-human-ref", num_labels=num_labels)
     model = model.to(device)
 
 
@@ -275,7 +274,7 @@ print(f"Best Hyperparameters: learning_rate={learning_rate}, batch_size={batch_s
 
 # Train the model using best hyperparameters
 args = TrainingArguments(
-    "trained_dnabert_final",
+    "trained_nucleotide",
     learning_rate=learning_rate,
     per_device_train_batch_size=batch_size,
     evaluation_strategy="epoch",
@@ -297,8 +296,8 @@ tokenizer = AutoTokenizer.from_pretrained("InstaDeepAI/nucleotide-transformer-50
         trust_remote_code=True,
     )
 
-num_labels = 3
-model = AutoModelForSequenceClassification.from_pretrained("InstaDeepAI/nucleotide-transformer-500m-human-ref", num_labels=4)
+
+model = AutoModelForSequenceClassification.from_pretrained("InstaDeepAI/nucleotide-transformer-500m-human-ref", num_labels=num_labels)
 model = model.to(device)
 
 
