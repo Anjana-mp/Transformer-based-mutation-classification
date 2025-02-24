@@ -66,7 +66,7 @@ def csv_to_dict(csv_file):
     return data
 
 # Example usage
-csv_file = "WGAN-GP.csv"
+csv_file = "Generated Sample data.csv"
 data = csv_to_dict(csv_file)
 for item in data:
     # Convert the string representation of labels into a list
