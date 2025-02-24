@@ -38,11 +38,11 @@ tokenizer = AutoTokenizer.from_pretrained(
         trust_remote_code=True,
     )
 
-num_labels = 4
+num_labels = 3
 model = transformers.AutoModelForSequenceClassification.from_pretrained(
         "zhihan1996/DNABERT-2-117M",
         trust_remote_code=True,
-        num_labels = 4,
+        num_labels = 3,
     )
 model = model.to(device)
 
@@ -66,16 +66,14 @@ def csv_to_dict(csv_file):
     return data
 
 # Example usage
-csv_file = "C:/Users/anjan/OneDrive/Desktop/Phd/Dataset Preparation/Cancerous.csv"
+csv_file = "WGAN-GP.csv"
 data = csv_to_dict(csv_file)
 for item in data:
     # Convert the string representation of labels into a list
     labels = eval(item.pop('labels'))
     # Add separate keys for each label with their corresponding boolean values
-    for label in ['SNV', 'INS', 'DUP', 'DEL']:
+    for label in ['SNV', 'INDEL', 'DUP']:
         item[label] = label in labels
-
-unique_labels = [[0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 0], [1, 1, 0, 0], [1, 1, 1, 0]]
 
 # Load dataset
 dataset = pd.DataFrame(data)
@@ -108,38 +106,19 @@ def preprocess_data(examples):
     for idx, label in enumerate(labels):
         labels_matrix[:, idx] = labels_batch[label]
     encoding["labels"] = labels_matrix.tolist()
-
-    # Determine the indices of the majority class
-    majority_class_indices = np.where(np.all(np.logical_or(labels_matrix == [1., 0., 0., 0.], labels_matrix == [1., 0., 1., 0.], labels_matrix == [1., 0., 0., 1.]), axis=1))[0]
-    minority_class_indices = np.where(np.any(np.logical_and(labels_matrix != [1., 0., 0., 0.], labels_matrix != [1., 0., 1., 0.], labels_matrix != [1., 0., 0., 1.]), axis=1))[0]
-
-    # If the majority class has more samples than the minority class
-    if len(majority_class_indices) > len(text) / 2:
-        # Calculate the number of samples to remove
-        num_samples_to_remove = len(majority_class_indices) - len(minority_class_indices)
-
-        # Randomly select indices from the majority class to remove
-        removed_indices = np.random.choice(majority_class_indices, num_samples_to_remove, replace=False)
-
-        # Remove samples from the majority class
-        for idx in sorted(removed_indices, reverse=True):
-            del encoding["input_ids"][idx]
-            del encoding["token_type_ids"][idx]
-            del encoding["attention_mask"][idx]
-            del encoding["labels"][idx]
-
+    
     return encoding
 
-batch_size = 8
+batch_size = 4
 metric_name = "f1"
 args = TrainingArguments(
     "trained_dnabert_final",
-    learning_rate=2e-5,
+    learning_rate=1e-5,
     per_device_train_batch_size=batch_size,
     evaluation_strategy = "epoch",
     save_strategy = "epoch",
     per_device_eval_batch_size=batch_size,
-    num_train_epochs=10,
+    num_train_epochs=7,
     weight_decay=0.01,
     do_train=True,
     do_eval=True,
@@ -204,7 +183,6 @@ def compute_metrics(p: EvalPrediction):
 
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
-        # class_weights = torch.tensor([0.1, 0.3, 0.2 , 0.3]).to(device)
         labels = inputs.get("labels")
         # Move labels tensor to the same device as logits (CUDA)
 
@@ -234,29 +212,4 @@ trainer = CustomTrainer(
 )
 
 trainer.train()
-#trainer.save_model("classification_model_gena")
-df1 = pd.DataFrame(trainer.state.log_history)
-df1.to_csv("loss_dna_cancerous.csv")
-
-result = trainer.evaluate()
-#with open("Cancerous_result_gena.txt",'w') as fr:
-#  fr.write(json.dumps(result))
-
-text = "GTATGAGCACTTGCT"
-encoding = tokenizer(text, return_tensors="pt")
-encoding = {k: v.to(trainer.model.device) for k,v in encoding.items()}
-
-outputs = trainer.model(**encoding)
-
-logits = outputs.logits
-logits.shape
-
-# apply sigmoid + threshold
-sigmoid = torch.nn.Sigmoid()
-probs = sigmoid(logits.squeeze().cpu())
-predictions = np.zeros(probs.shape)
-predictions[np.where(probs >= 0.5)] = 1
-# turn predicted id's into actual label names
-predicted_labels = [id2label[idx] for idx, label in enumerate(predictions) if label == 1.0]
-print(predicted_labels)
-
+trainer.save_model("classification_model")
