@@ -75,14 +75,13 @@ for item in data:
     for label in ['SNV', 'INDEL', 'DUP']:
         item[label] = label in labels
 
-unique_labels = [[0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [1, 0, 1, 0], [1, 1, 0, 0], [1, 1, 1, 0]]
 
 # Load dataset
 dataset = pd.DataFrame(data)
 
-# Split dataset into train (70%), validation (20%), and test (10%)
-train_data, temp_data = train_test_split(dataset, test_size=0.3, random_state=42)  # 30% will be split further
-val_data, test_data = train_test_split(temp_data, test_size=0.5, random_state=42)  # 1/3 of 30% -> 10% test, 20% validation
+# Split dataset into train (70%), validation (15%), and test (15%)
+train_data, temp_data = train_test_split(dataset, test_size=0.3, random_state=42)  
+val_data, test_data = train_test_split(temp_data, test_size=0.5, random_state=42)  
 
 # Convert to Hugging Face Dataset format
 train_dataset = Dataset.from_pandas(train_data)
@@ -104,8 +103,6 @@ label2id = {label:idx for idx, label in enumerate(labels)}
 
 
 def preprocess_data(examples):
-    snv_count=0
-    # take a batch of texts
     text = examples["Sequence"]
 
     # encode them
@@ -153,25 +150,19 @@ def multi_label_metrics(predictions, labels, threshold=0.5):
     # finally, compute metrics
     y_true = labels
     f1_micro_average = f1_score(y_true=y_true, y_pred=y_pred, average='weighted')
-    roc_auc = roc_auc_score(y_true, y_pred, average = 'weighted')
     accuracy = accuracy_score(y_true, y_pred)
     reca = recall_score(y_true, y_pred, average = 'weighted')
     class_report = classification_report(y_true, y_pred)
     precision = precision_score(y_true, y_pred, average = 'weighted')
 
-    #with open("Cancerous_classification_gena.txt", 'w') as f:
-      #f.write(class_report)
-    # return as dictionary
-
     metrics = {'f1': f1_micro_average,
-               'roc': roc_auc,
                'recall' : reca,
                'accuracy': accuracy,
                'precision':precision}
     return metrics
 
 def compute_metrics(p: EvalPrediction):
-    with torch.no_grad():  # Add this to disable gradient tracking
+    with torch.no_grad():  
         preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
         result = multi_label_metrics(predictions=preds, labels=p.label_ids)
     return result
@@ -180,9 +171,7 @@ num_labels=3
 
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
-        # class_weights = torch.tensor([0.1, 0.3, 0.2 , 0.3]).to(device)
         labels = inputs.get("labels")
-        # Move labels tensor to the same device as logits (CUDA)
 
 
         outputs = model(**inputs)
@@ -191,7 +180,6 @@ class CustomTrainer(Trainer):
         # Convert labels to one-hot encoded format
         num_classes = logits.size(-1)
         batch_size = logits.size(0)
-        labels_one_hot = torch.zeros(batch_size, num_classes, dtype=torch.float32, device=logits.device)
 
         loss_func = BCEWithLogitsLoss()
         loss = loss_func(logits.view(-1,num_labels),labels.type_as(logits).view(-1,num_labels))
