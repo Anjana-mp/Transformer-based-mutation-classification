@@ -152,21 +152,16 @@ def multi_label_metrics(predictions, labels, threshold=0.5):
     # finally, compute metrics
     y_true = labels
     f1_micro_average = f1_score(y_true=y_true, y_pred=y_pred, average='weighted')
-    roc_auc = roc_auc_score(y_true, y_pred, average = 'weighted')
     accuracy = accuracy_score(y_true, y_pred)
     reca = recall_score(y_true, y_pred, average = 'weighted')
     class_report = classification_report(y_true, y_pred)
     precision = precision_score(y_true, y_pred, average = 'weighted')
-    #with open("Cancerous_classification_gena.txt", 'w') as f:
-      #f.write(class_report)
-    # return as dictionary
+    
     f1_micro_average = f'{f1_micro_average:.4f}'
-    roc_auc = f'{roc_auc:.4f}'
     reca = f'{reca:.4f}'
     accuracy = f'{accuracy:.4f}'
     precision= f'{precision:.4f}'
     metrics = {'f1': f1_micro_average,
-               'roc': roc_auc,
                'recall' : reca,
                'accuracy': accuracy,
                'precision':precision}
@@ -190,10 +185,9 @@ class CustomTrainer(Trainer):
         outputs = model(**inputs)
         logits = (outputs.logits).to(device)
 
-        # Convert labels to one-hot encoded format
+        
         num_classes = logits.size(-1)
         batch_size = logits.size(0)
-        labels_one_hot = torch.zeros(batch_size, num_classes, dtype=torch.float32, device=logits.device)
 
         loss_func = BCEWithLogitsLoss()
         loss = loss_func(logits.view(-1,num_labels),labels.type_as(logits).view(-1,num_labels))
