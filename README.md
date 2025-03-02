@@ -5,8 +5,9 @@ This project focuses on **mutation classification** using **DNABERT 2** and **Nu
 
 ## Installation  
 To set up the required dependencies, run:  
-'''bash
+```bash
 pip install -r requirements.txt
+```
 
 
 ## Datasets
