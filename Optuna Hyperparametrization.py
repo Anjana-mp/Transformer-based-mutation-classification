@@ -202,7 +202,7 @@ class CustomTrainer(Trainer):
 # Hyperparameter tuning function using Optuna
 def objective(trial):
     # Hyperparameters to optimize
-    learning_rate = trial.suggest_loguniform("learning_rate", 1e-6, 1e-4)
+    learning_rate = trial.suggest_loguniform("learning_rate", 1e-6, 2e-5)
     batch_size = trial.suggest_int("batch_size", 4, 16, step=8)
     num_train_epochs = trial.suggest_int("num_train_epochs", 3, 10)
     weight_decay = trial.suggest_loguniform("weight_decay", 1e-6, 1e-2)
