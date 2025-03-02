@@ -13,9 +13,9 @@ pip install -r requirements.txt
 ## Datasets
 The following datasets are included in the project:
 
-Gen Sample.csv
-Gen Sample 2.csv
-Generated Sample.csv (a sample file for reference)
+* Gen Sample.csv
+* Gen Sample 2.csv
+* Generated Sample.csv (a sample file for reference)
 
 ## Usage
 To run the mutation classification code, execute:
