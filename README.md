@@ -1,6 +1,6 @@
 # Transformer-based models for uncovering genetic mutations in cancerous and non-cancerous genomes
 ## Overview  
-This project focuses on **mutation classification** using **DNABERT 2** and **Nucleotide Transformer** models. It processes DNA sequences and classifies mutations efficiently. The paper is available at https://doi.org/10.1016/j.gene.2025.149460
+This project focuses on **mutation classification** using **DNABERT 2** and **Nucleotide Transformer** models. It processes DNA sequences and classifies mutations efficiently. The paper is available at Transformer-based models for uncovering genetic mutations in cancerous and non-cancerous genomes. DOI: https://doi.org/10.1016/j.gene.2025.149460
 
 ## Installation  
 To set up the required dependencies, run:  
